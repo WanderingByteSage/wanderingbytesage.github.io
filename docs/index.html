@@ -1,7 +1,54 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NCAA Football Scores Filter</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    .filters {
+      margin-bottom: 20px;
+    }
+  </style>
 </head>
 <body>
-Test
+
+  <h1>NCAA Football Scores</h1>
+
+  <div class="filters">
+    <h3>Select Conferences:</h3>
+    <div id="conferenceFilters">
+      <!-- Checkboxes for conferences will be populated here dynamically -->
+    </div>
+  </div>
+
+  <!-- Table to display the filtered game data -->
+  <table id="scoresTable">
+    <thead>
+      <tr>
+        <th>Home Team</th>
+        <th>Away Team</th>
+        <th>Home Score</th>
+        <th>Away Score</th>
+        <th>Kickoff Time</th>
+        <th>Conference</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Game data will be dynamically inserted here -->
+    </tbody>
+  </table>
+
+  <script src="app.js"></script>
 </body>
 </html>
