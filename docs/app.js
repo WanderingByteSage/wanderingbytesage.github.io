@@ -84,6 +84,8 @@ function sortableHeaders() {
 // Populate the conference checkboxes dynamically
 function populateConferenceFilters() {
   const conferenceFilterDiv = document.getElementById("conferenceFilters");
+  console.log(data); 
+
 
   CONFERENCES.forEach((singleConference) => {
     // Set up Conference Checkboxes
