@@ -84,7 +84,6 @@ function sortableHeaders() {
 // Populate the conference checkboxes dynamically
 function populateConferenceFilters() {
   const conferenceFilterDiv = document.getElementById("conferenceFilters");
-  console.log(data); 
 
 
   CONFERENCES.forEach((singleConference) => {
@@ -198,6 +197,7 @@ async function filterGames() {
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
+    console.log(data); 
 
     const games = data.events;
     const tableBody = document.querySelector("#scoresTable tbody");
