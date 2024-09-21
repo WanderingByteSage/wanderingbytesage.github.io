@@ -1,54 +1,193 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NCAA Football Scores Filter</title>
-  <style>
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #ddd;
-    }
-    th {
-      background-color: #f2f2f2;
-    }
-    .filters {
-      margin-bottom: 20px;
-    }
-  </style>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NCAA Football Scores Filter</title>
+    <style>
+      :root {
+        --primary-color: #1e40af;
+        --secondary-color: #f0f9ff;
+        --accent-color: #3b82f6;
+        --text-color: #1e293b;
+        --hover-color: #e0f2fe;
+        --border-color: #bfdbfe;
+        --header-text-color: #ffffff;
+        --odd-row-color: #f8fafc;
+        --even-row-color: #ffffff;
+      }
 
-  <h1>NCAA Football Scores</h1>
+      body {
+        font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+        line-height: 1.6;
+        color: var(--text-color);
+        background-color: var(--secondary-color);
+      }
 
-  <div class="filters">
-    <h3>Select Conferences:</h3>
-    <div id="conferenceFilters">
-      <!-- Checkboxes for conferences will be populated here dynamically -->
+      #scoresTable {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+        margin-top: 20px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+
+      th,
+      td {
+        padding: 16px;
+        text-align: left;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      th {
+        background-color: var(--primary-color);
+        color: var(--header-text-color);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        transition: background-color 0.3s ease;
+        cursor: pointer;
+      }
+
+      th:hover {
+        background-color: var(--accent-color);
+      }
+
+      tbody tr:nth-child(odd) {
+        background-color: var(--odd-row-color);
+      }
+
+      tbody tr:nth-child(even) {
+        background-color: var(--even-row-color);
+      }
+
+      tbody tr:hover {
+        background-color: var(--hover-color);
+        transition: background-color 0.3s ease;
+      }
+
+      .team-name {
+        font-weight: 600;
+        color: var(--primary-color);
+      }
+
+      .score {
+        font-size: 1.1em;
+        font-weight: 700;
+        color: var(--accent-color);
+      }
+
+      .kickoff-time,
+      .clock,
+      .network {
+        font-size: 0.9em;
+        color: #64748b;
+      }
+
+      /* Sorting indicators */
+      th {
+        position: relative;
+        padding-right: 25px;
+      }
+
+      th::after {
+        content: "⇅";
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        opacity: 0.5;
+      }
+
+      th.asc::after {
+        content: "▲";
+        opacity: 1;
+      }
+
+      th.desc::after {
+        content: "▼";
+        opacity: 1;
+      }
+
+      /* Responsive design */
+      @media screen and (max-width: 768px) {
+        #scoresTable {
+          font-size: 14px;
+        }
+
+        th,
+        td {
+          padding: 12px 8px;
+        }
+
+        .kickoff-time,
+        .clock,
+        .network {
+          font-size: 0.8em;
+        }
+      }
+
+      /* Optional: Add a subtle animation for row updates */
+      @keyframes highlightRow {
+        0% {
+          background-color: var(--accent-color);
+        }
+        100% {
+          background-color: inherit;
+        }
+      }
+
+      .highlight {
+        animation: highlightRow 1s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>NCAA Football Scores</h1>
+
+    <div class="filters">
+      <h3>Select Conferences:</h3>
+      <div class="filter-group" id="conferenceFilters"></div>
+      <h3>Select Rankings:</h3>
+      <div class="filter-group" id="rankingFilters"></div>
     </div>
-  </div>
 
-  <!-- Table to display the filtered game data -->
-  <table id="scoresTable">
-    <thead>
-      <tr>
-        <th>Home Team</th>
-        <th>Away Team</th>
-        <th>Home Score</th>
-        <th>Away Score</th>
-        <th>Kickoff Time</th>
-        <th>Conference</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- Game data will be dynamically inserted here -->
-    </tbody>
-  </table>
+    <!-- Table to display the filtered game data -->
+    <table id="scoresTable">
+      <thead>
+        <tr>
+          <!-- too add: "curatedRank"."current" -->
+          <!-- too add: "records"."name"="overall" and "summary" -->
+          <!-- too add: colors? alternate color? -->
+          <!-- links to scoreboard? clubehouse? team? game stats? season stats? -->
+          <!-- final scores? -->
+          <!-- multi week view? -->
+          <!-- schedule? -->
 
-  <script src="app.js"></script>
-</body>
+          <th>Home Team</th>
+          <th>Away Team</th>
+          <th>Home Score</th>
+          <th>Away Score</th>
+          <th>Kickoff Time</th>
+          <th>Clock</th>
+          <!-- status.shortDetail -->
+          <th>Network</th>
+          <!-- broadcasts.names -->
+          <!-- market??-->
+          <!-- <th>Conference</th> -->
+          <!-- <th>Quarter</th> -->
+          <!-- <th>Clock</th> -->
+          <!-- <th>Status</th> -->
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Game data will be dynamically inserted here -->
+      </tbody>
+    </table>
+
+    <script src="app.js"></script>
+  </body>
 </html>
