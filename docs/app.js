@@ -191,7 +191,7 @@ async function filterGames() {
   // (3) Goes here...
 
   // Fetch data from the ESPN API
-  const apiUrl = 'http://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20240921';
+  const apiUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20240921';
   //const apiUrl = "https://wanderingbytesage.github.io/sample.json"; // Adjust the path if necessary
 
   try {
