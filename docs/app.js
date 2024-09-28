@@ -10,8 +10,9 @@ const CONFERENCES = [
 ];
 
 const RANKING = [
-  { id: "Ranked", name: "Top 25" },
   { id: "All", name: "All" },
+  { id: "Ranked", name: "Ranked" },
+  { id: "NonRanked", name: "Non-Ranked"}
 ];
 
 const QUARTER = [
@@ -25,6 +26,12 @@ const CLOSE_GAME = [
   { id: "Close Game", name: "Yes" },
   { id: "All", name: "All" },
 ];
+
+// populate all filters
+function populateAllFilters(){
+  populateConferenceFilters();
+  populateRankingFilters();  
+}
 
 // create sortable table
 function sortableHeaders() {
@@ -45,22 +52,38 @@ function sortableHeaders() {
 
       // Sort the rows
       rows.sort((a, b) => {
+        const aStatus = a.getAttribute('data-status');
+        const bStatus = b.getAttribute('data-status');
+
+        const statusOrder = {
+          'in-progress': -1,
+          'upcoming': 0,
+          'finished': 1
+        };
+
+        const aStatusOrder = statusOrder[aStatus] || 0; // Default to 0 (upcoming) if not found
+        const bStatusOrder = statusOrder[bStatus] || 0;
+      
+        // If the statuses are different, prioritize the status order
+        if (aStatusOrder !== bStatusOrder) {
+          return aStatusOrder - bStatusOrder;
+        }
+
         const aValue = a.children[index].textContent;
         const bValue = b.children[index].textContent;
 
         if (sortStates[index] === 0) {
-          // Default order (by first column)
-          return a.children[0].textContent.localeCompare(
-            b.children[0].textContent
-          );
+          // Default order by first column
+          return a.children[0].textContent.localeCompare(b.children[0].textContent);
         } else {
           // Check if the values are numbers
           const aNum = parseFloat(aValue);
           const bNum = parseFloat(bValue);
+      
           if (!isNaN(aNum) && !isNaN(bNum)) {
-            return sortStates[index] * (aNum - bNum);
+            return sortStates[index] * (aNum - bNum); // Sort by number
           } else {
-            return sortStates[index] * aValue.localeCompare(bValue);
+            return sortStates[index] * aValue.localeCompare(bValue); // Sort by text
           }
         }
       });
@@ -83,58 +106,56 @@ function sortableHeaders() {
 
 // Populate the conference checkboxes dynamically
 function populateConferenceFilters() {
-  const conferenceFilterDiv = document.getElementById("conferenceFilters");
+  const conferenceFilters = document.getElementById('filter_Conference');
 
+  const conferenceFiltersHeader = document.createElement('th');
+  conferenceFiltersHeader.innerText = 'Conference';
+  conferenceFiltersHeader.classList.add('filter-group-header');
+
+  conferenceFilters.classList.add('filter-group');
+  conferenceFilters.appendChild(conferenceFiltersHeader);
 
   CONFERENCES.forEach((singleConference) => {
-    // Set up Conference Checkboxes
-    const chkConference = document.createElement("input");
-    chkConference.type = "checkbox";
-    chkConference.id = "conf-" + singleConference.id; // Unique ID for each conference
-    chkConference.value = singleConference.id;
+    const rowConference = document.createElement('tr');
 
-    // Set Big Ten as the default checked checkbox
-    if (singleConference.id === "BigTen") {
-      chkConference.checked = true; // Default checked for Big Ten
-    }
-
-    // Add event listener for immediate filtering on change
-    chkConference.addEventListener("change", filterGames);
-
-    const lblConference = document.createElement("label");
-    lblConference.htmlFor = "conf-" + singleConference.id;
-    lblConference.innerText = singleConference.name;
-
-    // Append checkbox and label to the div (horizontally)
-    conferenceFilterDiv.appendChild(chkConference);
-    conferenceFilterDiv.appendChild(lblConference);
+    // enable checkbox: ${singleConference.id === "5" ? "checked" : ""} 
+    rowConference.innerHTML = `
+      <td><input type="checkbox" id="conf-${singleConference.id}" value="${singleConference.id}">
+      <label for="conf-${singleConference.id}">${singleConference.name}</label></td>
+      `;
+    rowConference.addEventListener("change", filterGames);
+    conferenceFilters.appendChild(rowConference);
   });
 }
 
 // Set up Ranking checkboxes dynamically
 function populateRankingFilters() {
-  const rankingFilterDiv = document.getElementById("rankingFilters");
+  const rankingFilters = document.getElementById("filter_Rankings");
+
+  const rankingFiltersHeader = document.createElement('th');
+  rankingFiltersHeader.innerText = 'Rankings';
+  rankingFiltersHeader.classList.add('filter-group-header');
+
+  rankingFilters.classList.add('filter-group');
+  rankingFilters.appendChild(rankingFiltersHeader);
 
   RANKING.forEach((singleRanking) => {
-    const chkRanking = document.createElement("input");
-    chkRanking.type = "checkbox";
-    chkRanking.id = "rank-" + singleRanking.id; // Unique ID for each ranking
-    chkRanking.value = singleRanking.id;
+    const rowRanking = document.createElement('tr');
 
-    // Set AP Rank 1 as the default checked checkbox
-    if (singleRanking.id === "AP1") {
-      chkRanking.checked = true; // Default checked for top rank
+    if (singleRanking.id === "Ranked") {
+      rowRanking.innerHTML = `
+      <td><input type="radio" checked=true id="ranking-${singleRanking.id}" value="${singleRanking.id}" name="ranking">
+      <label for="ranking-${singleRanking.id}">${singleRanking.name}</label></td>
+    `;
+    } else {
+      rowRanking.innerHTML = `
+      <td><input type="radio" id="ranking-${singleRanking.id}" value="${singleRanking.id}" name="ranking">
+      <label for="ranking-${singleRanking.id}">${singleRanking.name}</label></td>
+    `;
     }
 
-    chkRanking.addEventListener("change", filterGames);
-
-    const lblRanking = document.createElement("label");
-    lblRanking.htmlFor = "rank-" + singleRanking.id;
-    lblRanking.innerText = singleRanking.name;
-
-    // Append checkbox and label to the div (horizontally)
-    rankingFilterDiv.appendChild(chkRanking);
-    rankingFilterDiv.appendChild(lblRanking);
+    rowRanking.addEventListener("change", filterGames);
+    rankingFilters.appendChild(rowRanking);
   });
 }
 
@@ -170,9 +191,7 @@ async function filterGames() {
   // (1) Get selected conferences
   const selectedConferences = [];
   CONFERENCES.forEach((singleConference) => {
-    const conferenceCheckbox = document.getElementById(
-      "conf-" + singleConference.id
-    );
+    const conferenceCheckbox = document.getElementById("conf-" + singleConference.id);
 
     if (conferenceCheckbox && conferenceCheckbox.checked) {
       selectedConferences.push(conferenceCheckbox.value);
@@ -182,7 +201,8 @@ async function filterGames() {
   // (2) Get selected rankings
   const selectedRankings = [];
   RANKING.forEach((singleRanking) => {
-    const rankingCheckbox = document.getElementById("rank-" + singleRanking.id);
+    const rankingCheckbox = document.getElementById("ranking-" + singleRanking.id);
+
     if (rankingCheckbox && rankingCheckbox.checked) {
       selectedRankings.push(rankingCheckbox.value);
     }
@@ -191,15 +211,14 @@ async function filterGames() {
   // (3) Goes here...
 
   // Fetch data from the ESPN API
-  // const apiUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20240921';
-  const apiUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20240926-20240929';
+   const apiUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20240926-20240929';
   // const apiUrl = "https://wanderingbytesage.github.io/sample.json"; // Adjust the path if necessary
-  //const apiUrl = 'https://wanderingbytesage.github.io/sample.json'; // Adjust the path as necessary
+  //  const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // Adjust the path as necessary
 
   try {
     const response = await fetch(apiUrl);
     const data = await response.json();
-    console.log(data); 
+    console.log(data);
 
     const games = data.events;
     const tableBody = document.querySelector("#scoresTable tbody");
@@ -213,10 +232,13 @@ async function filterGames() {
     // Filter games by selected conferences and rankings
     const filteredGames = games.filter((game) => {
       // Loop through all games and access home and away teams in each game's 'competitors' array
+      const gameStatus = game.status.type.name;
       const gameCompetitors = game.competitions[0].competitors; // Assuming every game has competitions and competitors
       const homeTeam = gameCompetitors[0].team;
-      const awayTeam = gameCompetitors[1].team;
+      const homeTeam_Rank = gameCompetitors[0].curatedRank.current || "";
       const homeTeam_Conference = homeTeam.conferenceId || "";
+      const awayTeam = gameCompetitors[1].team;
+      const awayTeam_Rank = gameCompetitors[1].curatedRank.current || "";
       const awayTeam_Conference = awayTeam.conferenceId || "";
 
       // Conference filtering
@@ -226,10 +248,10 @@ async function filterGames() {
         selectedConferences.includes(awayTeam_Conference);
 
       // Ranking filtering
-      const rankingFilterMatch =
-        !filterByRanking ||
-        selectedRankings.includes(homeTeamRank) ||
-        selectedRankings.includes(awayTeamRank);
+      const rankingFilterMatch = filterByRanking && 
+        selectedRankings.includes('Ranked') ? ( homeTeam_Rank < 99 || awayTeam_Rank < 99 ) : 
+        selectedRankings.includes('NonRanked') ? ( homeTeam_Rank === 99 && awayTeam_Rank === 99 ) : 
+        true;
 
       // Only return games if all filters match (or are skipped)
       return conferenceFilterMatch && rankingFilterMatch;
@@ -265,7 +287,18 @@ async function filterGames() {
       const shortDetail = game.competitions[0].status.type.shortDetail;
       const broadcast = game.competitions[0].broadcasts[0].names;
 
+      // Determine the game status
+      let gameStatus;
+      if (gameStatus === '"STATUS_IN_PROGRESS') {
+        gameStatus = "in-progress";
+      } else if (gameStatus === 'STATUS_FINAL') {
+        gameStatus = "finished"; 
+      } else {
+        gameStatus = "upcoming"; 
+      }
+
       const row = document.createElement("tr");
+      row.setAttribute("data-status", gameStatus);
       row.innerHTML = `
           <td class="team-name">${homeTeam}</td>
           <td class="team-name">${awayTeam}</td>
@@ -283,8 +316,7 @@ async function filterGames() {
 }
 
 // Call populate functions to initialize the filters on page load
-populateConferenceFilters();
-// populateRankingFilters();  // to do
+populateAllFilters();
 filterGames();
 sortableHeaders();
 // populateCategoryFilters();  // Uncomment to add the third set of filters

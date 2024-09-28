@@ -17,6 +17,36 @@
     background-color: var(--secondary-color);
   }
 
+/* Filters Table BEGIN */
+#allFiltersContainer {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 10px;
+    /* border: 2px solid black; /* (DEBUG) Remove this after debugging */
+    padding: 20px;
+}
+
+  .filter-group {
+    border-collapse: collapse;
+    width: 100%;
+    display: flex;
+    flex-direction: column; /* Stack items vertically inside each group */
+    width: auto; /* Only take up as much width as needed */
+  }
+  .filter-group th {
+    line-height: 24px;
+    height: 24px;
+    padding:0px;
+  }
+  .filter-group tr td {
+    line-height: 12px;
+    height: 5px;
+    padding:0px;
+  }
+
+/* Filters Table END */
+
   #scoresTable {
     width: 100%;
     border-collapse: separate;
@@ -28,14 +58,14 @@
     overflow: hidden;
   }
 
-  th,
+  #scoresTable th,
   td {
     padding: 16px;
     text-align: left;
     border-bottom: 1px solid var(--border-color);
   }
 
-  th {
+  #scoresTable th {
     background-color: var(--primary-color);
     color: var(--header-text-color);
     font-weight: 600;
@@ -45,7 +75,7 @@
     cursor: pointer;
   }
 
-  th:hover {
+  #scoresTable th:hover {
     background-color: var(--accent-color);
   }
 
@@ -81,12 +111,12 @@
   }
 
   /* Sorting indicators */
-  th {
+  #scoresTable th {
     position: relative;
     padding-right: 25px;
   }
 
-  th::after {
+  #scoresTable th::after {
     content: "⇅";
     position: absolute;
     right: 8px;
@@ -95,12 +125,12 @@
     opacity: 0.5;
   }
 
-  th.asc::after {
+  #scoresTable th.asc::after {
     content: "▲";
     opacity: 1;
   }
 
-  th.desc::after {
+  #scoresTable th.desc::after {
     content: "▼";
     opacity: 1;
   }
