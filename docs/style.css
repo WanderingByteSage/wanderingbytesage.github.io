@@ -1,0 +1,138 @@
+:root {
+    --primary-color: #1e40af;
+    --secondary-color: #f0f9ff;
+    --accent-color: #3b82f6;
+    --text-color: #1e293b;
+    --hover-color: #e0f2fe;
+    --border-color: #bfdbfe;
+    --header-text-color: #ffffff;
+    --odd-row-color: #f8fafc;
+    --even-row-color: #ffffff;
+  }
+
+  body {
+    font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--secondary-color);
+  }
+
+  #scoresTable {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+      0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  th,
+  td {
+    padding: 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  th {
+    background-color: var(--primary-color);
+    color: var(--header-text-color);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+  }
+
+  th:hover {
+    background-color: var(--accent-color);
+  }
+
+  tbody tr:nth-child(odd) {
+    background-color: var(--odd-row-color);
+  }
+
+  tbody tr:nth-child(even) {
+    background-color: var(--even-row-color);
+  }
+
+  tbody tr:hover {
+    background-color: var(--hover-color);
+    transition: background-color 0.3s ease;
+  }
+
+  .team-name {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+
+  .score {
+    font-size: 1.1em;
+    font-weight: 700;
+    color: var(--accent-color);
+  }
+
+  .kickoff-time,
+  .clock,
+  .network {
+    font-size: 0.9em;
+    color: #64748b;
+  }
+
+  /* Sorting indicators */
+  th {
+    position: relative;
+    padding-right: 25px;
+  }
+
+  th::after {
+    content: "⇅";
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.5;
+  }
+
+  th.asc::after {
+    content: "▲";
+    opacity: 1;
+  }
+
+  th.desc::after {
+    content: "▼";
+    opacity: 1;
+  }
+
+  /* Responsive design */
+  @media screen and (max-width: 768px) {
+    #scoresTable {
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 12px 8px;
+    }
+
+    .kickoff-time,
+    .clock,
+    .network {
+      font-size: 0.8em;
+    }
+  }
+
+  /* Optional: Add a subtle animation for row updates */
+  @keyframes highlightRow {
+    0% {
+      background-color: var(--accent-color);
+    }
+    100% {
+      background-color: inherit;
+    }
+  }
+
+  .highlight {
+    animation: highlightRow 1s ease;
+  }
