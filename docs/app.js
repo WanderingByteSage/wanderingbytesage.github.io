@@ -186,6 +186,41 @@ function populateRankingFilters() {
   }
   */
 
+  function getAPIDateRange() {
+    const today = new Date();
+    const currentDay = today.getDay();
+
+    let dateFrom = new Date(today);
+    let dateTo = new Date(today);
+
+    // Sun = 0; Mon = 1; Tues = 2; Wed = 3; Thurs = 4; Fri = 5; Sat = 6
+    // If today = [Sun,Mon] then still return prior week; otherwise return current/upcoming week
+    let lowerBoundDay;  // Tuesday
+    if (today.getDay() < 2) {  // Sun = 0; Mon = 1
+      lowerBoundDay = -5 - currentDay;
+    } else {
+      lowerBoundDay = -(currentDay - 2);
+    }
+    
+    const upperBoundDate = (8 - currentDay) % 7 // || 0;  // If Monday, out 7 days
+  
+    dateFrom.setDate(today.getDate() + lowerBoundDay);
+    dateTo.setDate(today.getDate() + upperBoundDate);
+
+    const formatDate = (date) => {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2,'0');
+      return `${year}${month}${day}`;
+    }
+
+    return {
+      dateFrom: formatDate(dateFrom),
+      dateTo: formatDate(dateTo)
+    }
+  }
+
+
 // Filter games based on selected checkboxes
 async function filterGames() {
   // (1) Get selected conferences
@@ -210,15 +245,14 @@ async function filterGames() {
 
   // (3) Goes here...
 
-  // Fetch data from the ESPN API
-   const apiUrl = 'https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=20241005-20241005';
-  // const apiUrl = "https://wanderingbytesage.github.io/sample.json"; // Adjust the path if necessary
-  //const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // Adjust the path as necessary
-
   try {
+    // Generate API Key and Fetch data from the ESPN API
+    const { dateFrom, dateTo } = getAPIDateRange();
+    const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=${dateFrom}-${dateTo}`; // LIVE
+    //const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // DEBUG
+
     const response = await fetch(apiUrl);
     const data = await response.json();
-    console.log(data);
 
     const games = data.events;
     const tableBody = document.querySelector("#scoresTable tbody");
@@ -230,16 +264,18 @@ async function filterGames() {
     const filterByRanking = selectedRankings.length > 0;
 
     // Filter games by selected conferences and rankings
+    // This is NOT to display, just reduce the dataset per filters. Display comes later.
     const filteredGames = games.filter((game) => {
-      // Loop through all games and access home and away teams in each game's 'competitors' array
       const gameStatus = game.status.type.name;
       const gameCompetitors = game.competitions[0].competitors; // Assuming every game has competitions and competitors
-      const homeTeam = gameCompetitors[0].team;
-      const homeTeam_Rank = gameCompetitors[0].curatedRank.current || "";
-      const homeTeam_Conference = homeTeam.conferenceId || "";
-      const awayTeam = gameCompetitors[1].team;
-      const awayTeam_Rank = gameCompetitors[1].curatedRank.current || "";
-      const awayTeam_Conference = awayTeam.conferenceId || "";
+      const homeTeam_Name = gameCompetitors.find((c) => c.homeAway === "home").team.displayName || "N/A";
+      const homeTeam_Rank = gameCompetitors.find((c) => c.homeAway === "home").curatedRank.current || "";
+      //const homeTeam_Rank = gameCompetitors[0].curatedRank.current || "";
+      const homeTeam_Conference = homeTeam_Name.conferenceId || "";
+      const awayTeam_Name = gameCompetitors.find((c) => c.homeAway === "away").team.displayName || "N/A";
+      const awayTeam_Rank = gameCompetitors.find((c) => c.homeAway === "away").curatedRank.current || "";
+      //const awayTeam_Rank = gameCompetitors[1].curatedRank.current || "";
+      const awayTeam_Conference = awayTeam_Name.conferenceId || "";
 
       // Conference filtering
       const conferenceFilterMatch =
@@ -252,7 +288,7 @@ async function filterGames() {
         selectedRankings.includes('Ranked') ? ( homeTeam_Rank < 99 || awayTeam_Rank < 99 ) : 
         selectedRankings.includes('NonRanked') ? ( homeTeam_Rank === 99 && awayTeam_Rank === 99 ) : 
         true;
-
+  
       // Only return games if all filters match (or are skipped)
       return conferenceFilterMatch && rankingFilterMatch;
     });
@@ -266,26 +302,27 @@ async function filterGames() {
       console.log("No games match the selected filters.");
     }
 
+    // Append ranks to teams
+    //const displayHomeTeamName = homeTeam_Rank && homeTeam_Rank <= 25 ? `${homeTeam_Name} (${homeTeam_Rank})` : `${homeTeam_Name}`;
+
     // Insert filtered games into the table
-    filteredGames.forEach((game) => {
-      const homeTeam = game.competitions[0].competitors.find(
-        (c) => c.homeAway === "home"
-      ).team.displayName;
-      const awayTeam = game.competitions[0].competitors.find(
-        (c) => c.homeAway === "away"
-      ).team.displayName;
-      const homeScore =
-        game.competitions[0].competitors.find((c) => c.homeAway === "home")
-          .score || "N/A";
-      const awayScore =
-        game.competitions[0].competitors.find((c) => c.homeAway === "away")
-          .score || "N/A";
-      const kickoffTime = new Date(game.date).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      const shortDetail = game.competitions[0].status.type.shortDetail;
-      const broadcast = game.competitions[0].broadcasts[0].names;
+    // Display adjustments here.
+    filteredGames.forEach((f_games) => {
+      const homeTeam = f_games.competitions[0].competitors.find((c) => c.homeAway === "home");
+      const awayTeam = f_games.competitions[0].competitors.find((c) => c.homeAway === "away");
+      const homeScore = f_games.competitions[0].competitors.find((c) => c.homeAway === "home").score || "N/A";
+      const awayScore = f_games.competitions[0].competitors.find((c) => c.homeAway === "away").score || "N/A";
+      const homeTeam_Name = homeTeam.team.displayName || "N/A";
+      const awayTeam_Name = awayTeam.team.displayName || "N/A";
+      const homeTeam_Rank = homeTeam.curatedRank.current && homeTeam.curatedRank.current != 99 ? homeTeam.curatedRank.current : "";
+      const awayTeam_Rank = awayTeam.curatedRank.current && awayTeam.curatedRank.current != 99 ? awayTeam.curatedRank.current : "";
+      const kickoffTime = new Date(f_games.date).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", });
+      const shortDetail = f_games.competitions[0].status.type.shortDetail;
+      const broadcast = f_games.competitions[0].broadcasts[0].names;
+
+      // alterations
+      const homeTeam_DisplayName = homeTeam_Rank != '' ? `${homeTeam_Name} (${homeTeam_Rank})` : homeTeam_Name;
+      const awayTeam_DisplayName = awayTeam_Rank != '' ? `${awayTeam_Name} (${awayTeam_Rank})` : awayTeam_Name;
 
       // Determine the game status
       let gameStatus;
@@ -297,11 +334,12 @@ async function filterGames() {
         gameStatus = "upcoming"; 
       }
 
+
       const row = document.createElement("tr");
       row.setAttribute("data-status", gameStatus);
       row.innerHTML = `
-          <td class="team-name">${homeTeam}</td>
-          <td class="team-name">${awayTeam}</td>
+          <td class="team-name">${homeTeam_DisplayName}</td>
+          <td class="team-name">${awayTeam_DisplayName}</td>
           <td class="score">${homeScore}</td>
           <td class="score">${awayScore}</td>
           <td class="kickoff-time">${kickoffTime}</td>
