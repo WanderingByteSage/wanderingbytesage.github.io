@@ -8,7 +8,9 @@
     --header-text-color: #ffffff;
     --odd-row-color: #f8fafc;
     --even-row-color: #ffffff;
-  }
+  } 
+   
+  
 
   body {
     font-family: "Inter", "Segoe UI", "Roboto", sans-serif;
