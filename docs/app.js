@@ -42,67 +42,79 @@ function sortableHeaders() {
   // Keep track of the sorting state for each column
   const sortStates = Array.from(headers).map(() => 0); // 0: default, 1: ascending, -1: descending
 
+  // Extracted sorting logic into a function
+  function sortTable(index, order = 1) {
+    const tbody = table.querySelector("tbody");
+    const rows = Array.from(tbody.querySelectorAll("tr"));
+
+    // Set the sort state for the specified index
+    sortStates[index] = order;
+
+    // Sort the rows
+    rows.sort((a, b) => {
+      const aStatus = a.getAttribute('data-status');
+      const bStatus = b.getAttribute('data-status');
+      const statusOrder = {
+        'in-progress': -2,
+        'delayed': -1,
+        'upcoming': 0,
+        'finished': 1
+      };
+      
+      const aStatusOrder = statusOrder[aStatus] || 0; // Default to 0 (upcoming) if not found
+      const bStatusOrder = statusOrder[bStatus] || 0;
+
+      // If the statuses are different, prioritize the status order
+      if (aStatusOrder !== bStatusOrder) {
+        return aStatusOrder - bStatusOrder;
+      }
+
+      const aValue = a.children[index].textContent;
+      const bValue = b.children[index].textContent;
+
+      if (sortStates[index] === 0) {
+        // Default order by first column
+        return a.children[0].textContent.localeCompare(b.children[0].textContent);
+      } else {
+        // Check if the values are numbers
+        const aNum = parseFloat(aValue);
+        const bNum = parseFloat(bValue);
+
+        if (!isNaN(aNum) && !isNaN(bNum)) {
+          return sortStates[index] * (aNum - bNum); // Sort by number
+        } else {
+          return sortStates[index] * aValue.localeCompare(bValue); // Sort by text
+        }
+      }
+    });
+
+    // Clear and re-append the sorted rows
+    tbody.innerHTML = "";
+    rows.forEach((row) => tbody.appendChild(row));
+
+    // Update header styles to indicate sort direction
+    headers.forEach((h, i) => {
+      h.classList.remove("asc", "desc");
+      if (i === index) {
+        if (sortStates[i] === 1) h.classList.add("asc");
+        if (sortStates[i] === -1) h.classList.add("desc");
+      }
+    });
+  }0
+
+  // Attach click event listeners to headers
   headers.forEach((header, index) => {
     header.addEventListener("click", () => {
-      const tbody = table.querySelector("tbody");
-      const rows = Array.from(tbody.querySelectorAll("tr"));
-
       // Toggle sort state
       sortStates[index] = ((sortStates[index] + 2) % 3) - 1; // Cycles through -1, 0, 1
-
-      // Sort the rows
-      rows.sort((a, b) => {
-        const aStatus = a.getAttribute('data-status');
-        const bStatus = b.getAttribute('data-status');
-
-        const statusOrder = {
-          'in-progress': -1,
-          'upcoming': 0,
-          'finished': 1
-        };
-
-        const aStatusOrder = statusOrder[aStatus] || 0; // Default to 0 (upcoming) if not found
-        const bStatusOrder = statusOrder[bStatus] || 0;
-      
-        // If the statuses are different, prioritize the status order
-        if (aStatusOrder !== bStatusOrder) {
-          return aStatusOrder - bStatusOrder;
-        }
-
-        const aValue = a.children[index].textContent;
-        const bValue = b.children[index].textContent;
-
-        if (sortStates[index] === 0) {
-          // Default order by first column
-          return a.children[0].textContent.localeCompare(b.children[0].textContent);
-        } else {
-          // Check if the values are numbers
-          const aNum = parseFloat(aValue);
-          const bNum = parseFloat(bValue);
-      
-          if (!isNaN(aNum) && !isNaN(bNum)) {
-            return sortStates[index] * (aNum - bNum); // Sort by number
-          } else {
-            return sortStates[index] * aValue.localeCompare(bValue); // Sort by text
-          }
-        }
-      });
-
-      // Clear and re-append the sorted rows
-      tbody.innerHTML = "";
-      rows.forEach((row) => tbody.appendChild(row));
-
-      // Update header styles to indicate sort direction
-      headers.forEach((h, i) => {
-        h.classList.remove("asc", "desc");
-        if (i === index) {
-          if (sortStates[i] === 1) h.classList.add("asc");
-          if (sortStates[i] === -1) h.classList.add("desc");
-        }
-      });
+      sortTable(index, sortStates[index]);
     });
   });
+
+  // Set default sorting on page load
+  sortTable(0,1);
 }
+
 
 // Populate the conference checkboxes dynamically
 function populateConferenceFilters() {
@@ -250,7 +262,7 @@ async function filterGames() {
     const { dateFrom, dateTo } = getAPIDateRange();
     const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=${dateFrom}-${dateTo}`; // LIVE
     // const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // DEBUG
-    // const apiUrl ="scoreboard.json";
+    // const apiUrl ="scoreboard.json"; // DEBUG
 
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -277,8 +289,6 @@ async function filterGames() {
       const awayTeam_Name = gameCompetitors.find((c) => c.homeAway === "away").team.displayName || "N/A";
       const awayTeam_Rank = gameCompetitors.find((c) => c.homeAway === "away").curatedRank.current || "";
       const awayTeam_Conference = gameCompetitors.find((c) => c.homeAway === "away").team.conferenceId || "";
-
-      console.log(`test ${awayTeam_Conference}`);
 
       // Conference filtering
       const conferenceFilterMatch =
@@ -322,25 +332,30 @@ async function filterGames() {
       const kickoffTime = new Date(f_games.date).toLocaleTimeString([], {hour: "2-digit", minute: "2-digit", });
       const shortDetail = f_games.competitions[0].status.type.shortDetail;
       const broadcast = f_games.competitions[0].broadcasts[0].names;
+      const gameStatus = f_games.competitions[0].status.type.name;
 
       // alterations
       const homeTeam_DisplayName = homeTeam_Rank != '' ? `${homeTeam_Name} (${homeTeam_Rank})` : homeTeam_Name;
       const awayTeam_DisplayName = awayTeam_Rank != '' ? `${awayTeam_Name} (${awayTeam_Rank})` : awayTeam_Name;
 
       // Determine the game status
-      let gameStatus;
-      if (gameStatus === '"STATUS_IN_PROGRESS') {
-        gameStatus = "in-progress";
-      } else if (gameStatus === 'STATUS_FINAL') {
-        gameStatus = "finished"; 
+      // let gameStatus;
+      if (gameStatus === "STATUS_IN_PROGRESS") {
+        game_Status = "in-progress";
+      } else if (gameStatus === "STATUS_FINAL") {
+        game_Status = "finished";
+      } else if (gameStatus === "STATUS_HALFTIME") {
+        game_Status = "in-progress"; 
+      } else if (gameStatus === "STATUS_DELAYED") {
+        game_Status = "delayed"; 
       } else {
-        gameStatus = "upcoming"; 
+        game_Status = "upcoming"; 
       }
 
 
       const row = document.createElement("tr");
-      row.setAttribute("data-status", gameStatus);
-      row.classList.add(gameStatus);
+      row.setAttribute("data-status", game_Status);
+      row.classList.add(game_Status);
       row.innerHTML = `
           <td class="team-name">${homeTeam_DisplayName}</td>
           <td class="team-name">${awayTeam_DisplayName}</td>
@@ -354,11 +369,12 @@ async function filterGames() {
     });
   } catch (error) {
     console.error("Error fetching the games:", error);
+  } finally {
+    sortableHeaders();
   }
 }
 
 // Call populate functions to initialize the filters on page load
 populateAllFilters();
 filterGames();
-sortableHeaders();
 // populateCategoryFilters();  // Uncomment to add the third set of filters
