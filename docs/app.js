@@ -249,7 +249,8 @@ async function filterGames() {
     // Generate API Key and Fetch data from the ESPN API
     const { dateFrom, dateTo } = getAPIDateRange();
     const apiUrl = `https://site.api.espn.com/apis/site/v2/sports/football/college-football/scoreboard?dates=${dateFrom}-${dateTo}`; // LIVE
-    //const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // DEBUG
+    // const apiUrl = "https://wanderingbytesage.github.io/scoreboard.json"; // DEBUG
+    // const apiUrl ="scoreboard.json";
 
     const response = await fetch(apiUrl);
     const data = await response.json();
@@ -268,14 +269,16 @@ async function filterGames() {
     const filteredGames = games.filter((game) => {
       const gameStatus = game.status.type.name;
       const gameCompetitors = game.competitions[0].competitors; // Assuming every game has competitions and competitors
+
       const homeTeam_Name = gameCompetitors.find((c) => c.homeAway === "home").team.displayName || "N/A";
       const homeTeam_Rank = gameCompetitors.find((c) => c.homeAway === "home").curatedRank.current || "";
-      //const homeTeam_Rank = gameCompetitors[0].curatedRank.current || "";
-      const homeTeam_Conference = homeTeam_Name.conferenceId || "";
+      const homeTeam_Conference = gameCompetitors.find((c) => c.homeAway === "home").team.conferenceId || "";
+
       const awayTeam_Name = gameCompetitors.find((c) => c.homeAway === "away").team.displayName || "N/A";
       const awayTeam_Rank = gameCompetitors.find((c) => c.homeAway === "away").curatedRank.current || "";
-      //const awayTeam_Rank = gameCompetitors[1].curatedRank.current || "";
-      const awayTeam_Conference = awayTeam_Name.conferenceId || "";
+      const awayTeam_Conference = gameCompetitors.find((c) => c.homeAway === "away").team.conferenceId || "";
+
+      console.log(`test ${awayTeam_Conference}`);
 
       // Conference filtering
       const conferenceFilterMatch =
@@ -337,6 +340,7 @@ async function filterGames() {
 
       const row = document.createElement("tr");
       row.setAttribute("data-status", gameStatus);
+      row.classList.add(gameStatus);
       row.innerHTML = `
           <td class="team-name">${homeTeam_DisplayName}</td>
           <td class="team-name">${awayTeam_DisplayName}</td>
