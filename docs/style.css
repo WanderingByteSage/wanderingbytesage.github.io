@@ -118,6 +118,7 @@
   tr[data-status="finished"] .clock {
     color: var(--game-over-color);
     font-style:italic;
+    font-weight:normal;
   }
 
   tr[data-status="in-progress"] .kickoff-time,
@@ -128,6 +129,7 @@
   tr[data-status="delayed"] .kickoff-time,
   tr[data-status="delayed"] .clock {
     background-color: var(--game-delay-color);
+    font-weight:normal;
   }
 
   /* Sorting indicators */
